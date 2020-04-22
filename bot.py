@@ -23,7 +23,8 @@ class SupportBot:
     bill_amount = round(random.uniform(12, 35), 2)
 
     def __init__(self):
-        self.matching = {"how_to_pay": [r".*how.*pay.*(the)? bill.*", r".*where.*pay.*(the|my)? bill.*"],
+        self.matching = {"how_to_pay": [r".*how.*pay.*(the)? bill.*",
+                                        r".*where.*pay.*(the|my)? bill.*", ".*how.*pay.*"],
                          "pay_bill": [r".*want.*pay.*(the|my)? bill.*", r".*need.*pay.*(the|my)? bill.*"],
                          "menu": [r".*(can|could)?.*(have|see|bring)?.*(the)?.* menu.*"],
                          "bathroom": [r".*where.*bathroom.*"]}
@@ -74,14 +75,11 @@ class SupportBot:
             print(f"Thank you, {self.customer}")
             return input(f"Anything else, {self.customer}?\n> ")
         elif pay_option.lower() == "card":
-            card_number = input("Please enter your card number:\n> ")
-            card_number = re.findall(r"\b\d+\b", card_number)
-            self.pay_bill(card_number)
+            self.pay_bill()
 
-    def pay_bill(self, card_number=None):
-        if card_number is None:
-            card_number = input("Please enter your card number to pay the bill.\n> ")
-            card_number = re.findall(r"\b\d+\b", card_number)
+    def pay_bill(self):
+        card_number = input("Please enter your card number to pay the bill.\n> ")
+        card_number = re.findall(r"\b\d+\b", card_number)
         progress_bar()
         print("Your credit card {} was charged with {}$".format(card_number, self.bill_amount))
         return input(f"Anything else, {self.customer}?\n> ")
