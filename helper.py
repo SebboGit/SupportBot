@@ -1,11 +1,7 @@
 import re
-from collections import Counter
-import spacy
-from nltk import pos_tag
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 
-nlp = spacy.load("en")
 stop_words = set(stopwords.words("english"))
 
 
@@ -25,7 +21,7 @@ def compare(user_message, possible_response):
     return similar_words
 
 
-def similarity(tokens, category):
+def get_similarity(tokens, category):
     output = []
     for token in tokens:
         output.append([token.text, category.text, token.similarity(category)])

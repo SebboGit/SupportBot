@@ -6,5 +6,8 @@ response_3 = "{} includes habanero, so it is a bit spicy!"
 response_4 = "{} costs " + str(int(random.uniform(12, 30)))
 blank = "food"
 
+menu_food = ["chicken", "fish"]
+menu_price = [12, 19]
+
 
 responses = [response_1, response_2, response_3, response_4]

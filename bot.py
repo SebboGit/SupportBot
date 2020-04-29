@@ -2,6 +2,13 @@ import re
 import random
 import time
 import sys
+from nltk import pos_tag
+import spacy
+from collections import Counter
+from helper import preprocess, compare, extract_nouns, get_similarity
+from responses import responses, blank, menu_food, menu_price
+
+word2vec = spacy.load("en")
 
 
 def progress_bar():
@@ -23,9 +30,7 @@ class ChatBot:
     bill_amount = round(random.uniform(12, 35), 2)
 
     def __init__(self):
-        self.matching = {"how_to_pay": [r".*how.*pay.*(the)? bill.*",
-                                        r".*where.*pay.*(the|my)? bill.*", ".*how.*pay.*"],
-                         "pay_bill": [r".*want.*pay.*(the|my)? bill.*", r".*need.*pay.*(the|my)? bill.*"],
+        self.matching = {"pay_bill": [r".*want.*pay.*(the|my)? bill.*", r".*need.*pay.*(the|my)? bill.*"],
                          "menu": [r".*(can|could)?.*(have|see|bring)?.*(the)?.* menu.*"],
                          "bathroom": [r".*where.*bathroom.*"]}
         self.customer = ""
@@ -33,39 +38,65 @@ class ChatBot:
     def welcome(self):
         self.customer = input("Hey, my name is Blooooop. Could you tell me your name, please?\n> ")
 
-        task = input(f"Hey {self.customer}, what can I help you with?\n> ")
+        task = input(f"Hey {self.customer}, what can I help you with?\n> ").lower()
 
-        if task.lower() in self.negatives:
+        if task in self.negatives:
             answer = input("Are you sure you don't need my help? [yes|no]\n> ")
             if answer.lower() == "yes":
                 print("Okay, have a nice day!")
                 return
             else:
-                task = input(f"What can I help you with, {self.customer}?\n> ")
+                task = input(f"What can I help you with, {self.customer}?\n> ").lower()
 
         self.handle_conversation(task)
 
     def handle_conversation(self, reply):
         while not self.exit_bot(reply):
-            reply = self.find_match(reply)
+            reply = self.respond(reply)
 
     def exit_bot(self, reply):
         for exit_ in self.exits:
-            if exit_ in reply.lower():
+            if exit_ in reply:
                 print("Okay, have a nice day!")
                 return True
         return False
 
-    def find_match(self, reply):
+    @staticmethod
+    def find_match(reply, possible_responses):
+        bow_user = Counter(preprocess(reply))
+        bow_responses = [Counter(preprocess(response)) for response in possible_responses]
+        similarity_list = [compare(bow_user, response) for response in bow_responses]
+        idx = similarity_list.index(max(similarity_list))
+        return possible_responses[idx]
+
+    def respond(self, reply):
         for key, value in self.matching.items():
             for pattern in value:
-                match = re.match(pattern, reply.lower())
-                if match and key == "how_to_pay":
-                    return self.show_billing_options()
+                match = re.match(pattern, reply)
                 if match and key == "pay_bill":
-                    return self.pay_bill()
+                    return self.show_billing_options()
+                if match and key == "menu":
+                    return self.show_menu()
+        best_response = self.find_match(reply, responses)
+        entity = self.find_entities(reply)
+        print(best_response.format(entity))
 
-        return input("Sorry, I didn't understand. Could you ask again differently?\n> ")
+        reply = input(f"Anything else, {self.customer}?\n> ")
+        return reply
+
+    @staticmethod
+    def find_entities(reply):
+        tagged_reply = pos_tag(preprocess(reply))
+        nouns = extract_nouns(tagged_reply)
+        tokens = word2vec(" ".join(nouns))
+        category = word2vec(blank)
+        result = get_similarity(tokens, category)
+
+        result.sort(key=lambda x: x[2])
+        if len(result) < 1:
+            return blank
+        else:
+            return result[-1][0]
 
     def show_billing_options(self):
         pay_option = input(f"You can either pay with cash or by card.\nHow would you like to pay?\n> ")
@@ -83,6 +114,15 @@ class ChatBot:
         progress_bar()
         print("Your credit card {} was charged with {}$".format(card_number, self.bill_amount))
         return input(f"Anything else, {self.customer}?\n> ")
+
+    def show_menu(self):
+        print("Here's the menu for you:\n")
+        for food in zip(menu_food, menu_price):
+            print(f"{food[0].capitalize()} for {food[1]}$")
+        food_wish = input("\nWhat would you like to order?\n> ").lower()
+        while food_wish not in menu_food:
+            food_wish = input("Sorry, I didn't get that.").lower()
+        return input(f"Sure. Anything else, {self.customer}?\n> ")
 
 
 bot = ChatBot()
