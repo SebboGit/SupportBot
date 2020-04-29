@@ -17,7 +17,7 @@ def progress_bar():
     print(" Done ...\n")
 
 
-class SupportBot:
+class ChatBot:
     negatives = ("don't", "stop", "nothing")
     exits = ("bye", "see you", "quit", "pause", "exit", "goodbye", "later", "no")
     bill_amount = round(random.uniform(12, 35), 2)
@@ -85,5 +85,5 @@ class SupportBot:
         return input(f"Anything else, {self.customer}?\n> ")
 
 
-bot = SupportBot()
+bot = ChatBot()
 bot.welcome()
