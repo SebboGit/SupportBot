@@ -23,3 +23,19 @@ def compare(user_message, possible_response):
         if word in possible_response:
             similar_words += 1
     return similar_words
+
+
+def similarity(tokens, category):
+    output = []
+    for token in tokens:
+        output.append([token.text, category.text, token.similarity(category)])
+    return output
+
+
+def extract_nouns(sentence):
+    """:arg sentence must be tagged with part of speech"""
+    nouns = []
+    for word in sentence:
+        if word[1].startswith("N"):
+            nouns.append(word[0])
+    return nouns
