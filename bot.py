@@ -8,7 +8,7 @@ from collections import Counter
 from helper import preprocess, compare, extract_nouns, get_similarity
 from responses import responses, blank, menu_food, menu_price
 
-word2vec = spacy.load("en")
+word2vec = spacy.load("en_core_web_md")
 
 
 def progress_bar():
@@ -27,13 +27,13 @@ def progress_bar():
 class ChatBot:
     negatives = ("don't", "stop", "nothing")
     exits = ("bye", "see you", "quit", "pause", "exit", "goodbye", "later", "no")
-    bill_amount = round(random.uniform(12, 35), 2)
 
     def __init__(self):
-        self.matching = {"pay_bill": [r".*want.*pay.*(the|my)? bill.*", r".*need.*pay.*(the|my)? bill.*"],
-                         "menu": [r".*(can|could)?.*(have|see|bring)?.*(the)?.* menu.*"],
-                         "bathroom": [r".*where.*bathroom.*"]}
+        self.matching = {"pay_bill": [r".*(want|need)?.*pay.*(the|my)? bill.*", r".*get.*(the|my)? bill.*"],
+                         "menu": [r".*(can|could)?.*(have|see|bring)?.*(the)?.* menu.*",
+                                  r".*what.*you.*recommend.*"]}
         self.customer = ""
+        self.bill_amount = 0
 
     def welcome(self):
         self.customer = input("Hey, my name is Blooooop. Could you tell me your name, please?\n> ")
@@ -120,8 +120,14 @@ class ChatBot:
         for food in zip(menu_food, menu_price):
             print(f"{food[0].capitalize()} for {food[1]}$")
         food_wish = input("\nWhat would you like to order?\n> ").lower()
-        while food_wish not in menu_food:
-            food_wish = input("Sorry, I didn't get that.").lower()
+        for word in food_wish.split():
+            if word in menu_food:
+                idx = menu_food.index(word)
+                self.bill_amount += menu_price[idx]
+                break
+        else:
+            print("Sorry, I didn't get that.")
+            return self.show_menu()
         return input(f"Sure. Anything else, {self.customer}?\n> ")
 
 
