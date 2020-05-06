@@ -1,7 +1,9 @@
 import re
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+import spacy
 
+word2vec = spacy.load("en_core_web_md")
 stop_words = set(stopwords.words("english"))
 
 
